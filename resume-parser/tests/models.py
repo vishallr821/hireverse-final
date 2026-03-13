@@ -47,6 +47,7 @@ class Test(models.Model):
     ai_report = models.TextField(blank=True)
     head_turn_violations = models.IntegerField(default=0)
     multiple_face_violations = models.IntegerField(default=0)
+    tab_switch_violations = models.IntegerField(default=0)
     proctoring_terminated = models.BooleanField(default=False)
 
     def get_invite_url(self):
@@ -151,6 +152,7 @@ class DSASession(models.Model):
     # Proctoring
     head_turn_violations = models.IntegerField(default=0)
     multiple_face_violations = models.IntegerField(default=0)
+    tab_switch_violations = models.IntegerField(default=0)
     proctoring_terminated = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)

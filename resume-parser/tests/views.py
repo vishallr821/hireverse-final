@@ -238,61 +238,56 @@ def test_list(request):
 @csrf_exempt
 @require_POST
 def check_proctoring(request, token):
-    """API endpoint to check proctoring violations"""
     try:
         test = get_object_or_404(Test, invite_token=token)
-        
         if test.status != 'active':
-            return JsonResponse({'error': 'Test not active'}, status=400)
-        
+            return JsonResponse({'terminate': False, 'warning': None})
+
         data = json.loads(request.body)
         frame_data = data.get('frame')
-        
+        consecutive = data.get('consecutive', 0)  # JS tracks consecutive bad frames
+
         if not frame_data:
             return JsonResponse({'error': 'No frame data'}, status=400)
-        
-        # Decode base64 frame
+
         import base64
         frame_bytes = base64.b64decode(frame_data.split(',')[1])
-        
+
         monitor = ProctorMonitor()
-        violations = monitor.analyze_frame(frame_bytes)
+        result = monitor.analyze_frame(frame_bytes)
         monitor.cleanup()
-        
-        # Track violations
+
         terminate = False
         warning = None
-        
-        if violations['head_turned']:
+
+        # Only count violation if face was missing for 2 consecutive checks
+        if result['head_turned'] and consecutive >= 2:
             test.head_turn_violations += 1
             if test.head_turn_violations >= 5:
                 test.proctoring_terminated = True
                 test.status = 'completed'
                 terminate = True
             else:
-                warning = f"Head turn detected ({test.head_turn_violations}/5)"
-        
-        if violations['face_count'] > 1:
+                warning = f"⚠️ Please face the camera! ({test.head_turn_violations}/5)"
+
+        if result['face_count'] > 1:
             test.multiple_face_violations += 1
-            if test.multiple_face_violations == 1:
-                warning = "Multiple faces detected! Warning 1/5"
-            elif test.multiple_face_violations >= 5:
+            if test.multiple_face_violations >= 5:
                 test.proctoring_terminated = True
                 test.status = 'completed'
                 terminate = True
             else:
-                warning = f"Multiple faces detected ({test.multiple_face_violations}/5)"
-        
+                warning = f"⚠️ Multiple faces detected! ({test.multiple_face_violations}/5)"
+
         test.save()
-        
         return JsonResponse({
-            'violations': violations,
+            'head_turned': result['head_turned'],
+            'face_count': result['face_count'],
             'head_turn_count': test.head_turn_violations,
             'multiple_face_count': test.multiple_face_violations,
             'terminate': terminate,
             'warning': warning
         })
-        
     except Exception as e:
         import traceback
         print(f"Proctoring error: {str(e)}")
@@ -377,59 +372,55 @@ def dsa_take(request, token):
 @csrf_exempt
 @require_POST
 def check_dsa_proctoring(request, token):
-    """Proctoring for DSA round"""
     try:
         dsa_session = get_object_or_404(DSASession, invite_token=token)
-        
         if dsa_session.status != 'active':
-            return JsonResponse({'error': 'DSA session not active'}, status=400)
-        
+            return JsonResponse({'terminate': False, 'warning': None})
+
         data = json.loads(request.body)
         frame_data = data.get('frame')
-        
+        consecutive = data.get('consecutive', 0)
+
         if not frame_data:
             return JsonResponse({'error': 'No frame data'}, status=400)
-        
+
         import base64
         frame_bytes = base64.b64decode(frame_data.split(',')[1])
-        
+
         monitor = ProctorMonitor()
-        violations = monitor.analyze_frame(frame_bytes)
+        result = monitor.analyze_frame(frame_bytes)
         monitor.cleanup()
-        
+
         terminate = False
         warning = None
-        
-        if violations['head_turned']:
+
+        if result['head_turned'] and consecutive >= 2:
             dsa_session.head_turn_violations += 1
             if dsa_session.head_turn_violations >= 5:
                 dsa_session.proctoring_terminated = True
                 dsa_session.status = 'completed'
                 terminate = True
             else:
-                warning = f"Head turn detected ({dsa_session.head_turn_violations}/5)"
-        
-        if violations['face_count'] > 1:
+                warning = f"⚠️ Please face the camera! ({dsa_session.head_turn_violations}/5)"
+
+        if result['face_count'] > 1:
             dsa_session.multiple_face_violations += 1
-            if dsa_session.multiple_face_violations == 1:
-                warning = "Multiple faces detected! Warning 1/5"
-            elif dsa_session.multiple_face_violations >= 5:
+            if dsa_session.multiple_face_violations >= 5:
                 dsa_session.proctoring_terminated = True
                 dsa_session.status = 'completed'
                 terminate = True
             else:
-                warning = f"Multiple faces detected ({dsa_session.multiple_face_violations}/5)"
-        
+                warning = f"⚠️ Multiple faces detected! ({dsa_session.multiple_face_violations}/5)"
+
         dsa_session.save()
-        
         return JsonResponse({
-            'violations': violations,
+            'head_turned': result['head_turned'],
+            'face_count': result['face_count'],
             'head_turn_count': dsa_session.head_turn_violations,
             'multiple_face_count': dsa_session.multiple_face_violations,
             'terminate': terminate,
             'warning': warning
         })
-        
     except Exception as e:
         import traceback
         print(f"DSA Proctoring error: {str(e)}")
@@ -464,3 +455,63 @@ def all_final_results(request):
     return render(request, 'tests/all_final_results.html', {
         'final_results': final_results
     })
+
+
+@csrf_exempt
+@require_POST
+def report_tab_switch(request, token):
+    """Record tab switch violation for aptitude/technical test"""
+    try:
+        test = get_object_or_404(Test, invite_token=token)
+        if test.status != 'active':
+            return JsonResponse({'terminate': False, 'warning': None})
+
+        test.tab_switch_violations += 1
+        terminate = False
+        warning = None
+
+        if test.tab_switch_violations >= 5:
+            test.proctoring_terminated = True
+            test.status = 'completed'
+            terminate = True
+        else:
+            warning = f"Tab switch detected! ({test.tab_switch_violations}/5)"
+
+        test.save()
+        return JsonResponse({
+            'tab_switch_count': test.tab_switch_violations,
+            'terminate': terminate,
+            'warning': warning
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def report_dsa_tab_switch(request, token):
+    """Record tab switch violation for DSA round"""
+    try:
+        dsa_session = get_object_or_404(DSASession, invite_token=token)
+        if dsa_session.status != 'active':
+            return JsonResponse({'terminate': False, 'warning': None})
+
+        dsa_session.tab_switch_violations += 1
+        terminate = False
+        warning = None
+
+        if dsa_session.tab_switch_violations >= 5:
+            dsa_session.proctoring_terminated = True
+            dsa_session.status = 'completed'
+            terminate = True
+        else:
+            warning = f"Tab switch detected! ({dsa_session.tab_switch_violations}/5)"
+
+        dsa_session.save()
+        return JsonResponse({
+            'tab_switch_count': dsa_session.tab_switch_violations,
+            'terminate': terminate,
+            'warning': warning
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

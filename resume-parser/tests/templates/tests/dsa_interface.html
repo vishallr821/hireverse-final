@@ -23,8 +23,24 @@
 </div>
 
 <!-- Proctoring Alert -->
-<div id="proctor-alert" class="alert alert-warning alert-dismissible fade" role="alert" style="position:fixed;top:80px;right:20px;z-index:9999;display:none;">
-    <strong>Warning!</strong> <span id="proctor-message"></span>
+<div id="proctor-alert" style="
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    min-width: 350px;
+    display: none;
+    background: #ff4444;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 15px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    text-align: center;
+">
+    ⚠️ <span id="proctor-message"></span>
 </div>
 
 <!-- Hidden video for proctoring -->
@@ -59,24 +75,28 @@ const video = document.getElementById('webcam');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let proctorInterval;
+let proctorBusy = false;
+let consecutiveBadFrames = 0;
 
 async function startProctoring() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-        
-        proctorInterval = setInterval(checkProctoring, 3000);
+        video.onloadedmetadata = () => {
+            proctorInterval = setInterval(checkProctoring, 4000);
+        };
     } catch (err) {
         console.error('Camera access denied:', err);
-        alert('Camera access is required for this DSA round.');
     }
 }
 
 function checkProctoring() {
+    if (proctorBusy || video.videoWidth === 0) return;
+    proctorBusy = true;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
-    
+
     canvas.toBlob(async (blob) => {
         const reader = new FileReader();
         reader.onloadend = async () => {
@@ -84,40 +104,66 @@ function checkProctoring() {
                 const response = await fetch('{% url "tests:check_dsa_proctoring" dsa_session.invite_token %}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ frame: reader.result })
+                    body: JSON.stringify({ frame: reader.result, consecutive: consecutiveBadFrames })
                 });
-                
                 const data = await response.json();
-                
-                if (data.warning) {
-                    showAlert(data.warning);
+
+                if (data.head_turned) {
+                    consecutiveBadFrames++;
+                } else {
+                    consecutiveBadFrames = 0;
                 }
-                
+
+                if (data.warning) showAlert(data.warning);
+
                 if (data.terminate) {
                     clearInterval(proctorInterval);
                     alert('DSA session terminated due to proctoring violations.');
                     window.location.href = '{% url "tests:final_results" test.id %}';
                 }
             } catch (err) {
-                console.error('Proctoring check failed:', err);
+                console.error('Proctoring error:', err);
+            } finally {
+                proctorBusy = false;
             }
         };
         reader.readAsDataURL(blob);
-    }, 'image/jpeg', 0.8);
+    }, 'image/jpeg', 0.7);
 }
 
 function showAlert(message) {
-    const alert = document.getElementById('proctor-alert');
+    const alertEl = document.getElementById('proctor-alert');
     document.getElementById('proctor-message').textContent = message;
-    alert.style.display = 'block';
-    alert.classList.add('show');
-    setTimeout(() => {
-        alert.classList.remove('show');
-        setTimeout(() => alert.style.display = 'none', 150);
+    alertEl.style.display = 'block';
+    clearTimeout(window._alertTimeout);
+    window._alertTimeout = setTimeout(() => {
+        alertEl.style.display = 'none';
     }, 5000);
 }
 
 startProctoring();
+
+// Tab Switch Detection
+let tabSwitchEnabled = false;
+setTimeout(() => { tabSwitchEnabled = true; }, 5000);
+
+document.addEventListener('visibilitychange', () => {
+    if (!tabSwitchEnabled || !document.hidden) return;
+    fetch('{% url "tests:report_dsa_tab_switch" dsa_session.invite_token %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.terminate) {
+            clearInterval(proctorInterval);
+            alert('DSA session terminated due to repeated tab switching.');
+            window.location.href = '{% url "tests:final_results" test.id %}';
+        } else if (data.warning) {
+            showAlert(data.warning);
+        }
+    }).catch(() => {});
+});
 
 // Listen for completion from iframe
 window.addEventListener('message', (event) => {

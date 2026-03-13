@@ -29,4 +29,8 @@ urlpatterns = [
          views.final_results, name='final_results'),
     path('all-final-results/',
          views.all_final_results, name='all_final_results'),
+    path('tab-switch/<uuid:token>/',
+         views.report_tab_switch, name='report_tab_switch'),
+    path('dsa/tab-switch/<uuid:token>/',
+         views.report_dsa_tab_switch, name='report_dsa_tab_switch'),
 ]
