@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}{{ candidate.name }}{% endblock %}
+{% block content %}
+
+<a href="{% url 'resumes:candidate_list' %}" class="hv-back">
+    <i class="bi bi-arrow-left"></i> Back to Candidates
+</a>
+
+<div class="row g-4">
+    <!-- LEFT COLUMN: Profile info -->
+    <div class="col-md-4">
+        <div class="hv-card text-center mb-4">
+            <div class="hv-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 32px;">
+                {{ candidate.name|slice:":1" }}
+            </div>
+            <h3 class="mb-1 text-primary">{{ candidate.name }}</h3>
+            <div class="d-flex flex-column gap-2 mb-4">
+                <div class="small">
+                    <i class="bi bi-envelope text-muted me-2"></i> {{ candidate.email|default:"Not provide" }}
+                </div>
+                <div class="small">
+                    <i class="bi bi-phone text-muted me-2"></i> {{ candidate.phone|default:"Not provided" }}
+                </div>
+                <div class="mt-2 text-center">
+                    {% if candidate.embedding %}
+                        <span class="hv-badge hv-badge-green"><i class="bi bi-check-circle me-1"></i> AI Embedded</span>
+                    {% else %}
+                        <span class="hv-badge hv-badge-amber">Pending Embedding</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <hr class="hv-divider">
+            
+            <div class="text-start">
+                <h6 class="hv-label mb-3">Skills Identified ({{ candidate.parsed_skills|length }})</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for skill in candidate.parsed_skills %}
+                        <span class="hv-skill-tag">{{ skill }}</span>
+                    {% empty %}
+                        <span class="text-muted small">No skills parsed</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <hr class="hv-divider">
+            
+            {% if candidate.resume_file %}
+                <a href="{{ candidate.resume_file.url }}" target="_blank" class="hv-btn hv-btn-outline w-100 justify-content-center">
+                    <i class="bi bi-file-earmark-pdf"></i> View Original File
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stats & Text -->
+    <div class="col-md-8">
+        <!-- RANKING HISTORY -->
+        <div class="hv-card mb-4">
+            <h3 class="hv-card-title">
+                <i class="bi bi-bar-chart"></i> Ranking History
+            </h3>
+            <div class="table-responsive">
+                <table class="hv-table">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Rank</th>
+                            <th>Cosine</th>
+                            <th>LLM</th>
+                            <th>Final</th>
+                            <th>Test Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rank in candidate.rankings.all|dictsortreversed:"ranked_at" %}
+                        <tr>
+                            <td class="fw-bold">{{ rank.job.title }}</td>
+                            <td>#{{ rank.rank_position }}</td>
+                            <td>{{ rank.cosine_score|floatformat:3 }}</td>
+                            <td>{{ rank.llm_score|default:"-" }}</td>
+                            <td>
+                                <span class="hv-score">{{ rank.final_score|floatformat:1 }}%</span>
+                            </td>
+                            <td>
+                                {% with test=rank.tests.first %}
+                                    {% if test and test.status == 'completed' %}
+                                        <span class="fw-bold text-success">{{ test.total_score }}%</span>
+                                    {% elif test %}
+                                        <span class="text-muted small">{{ test.status|title }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <a href="{% url 'ranking:ranking_results' rank.job.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">
+                                    <i class="bi bi-file-earmark-text"></i> Full Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">No ranking history found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RAW TEXT -->
+        <div class="hv-card">
+            <h3 class="hv-card-title">
+                <i class="bi bi-file-text"></i> Extracted Resume Text
+            </h3>
+            <div class="p-3 rounded bg-light" style="max-height: 400px; overflow-y: auto;">
+                <pre class="small text-secondary mb-0" style="white-space: pre-wrap; font-family: 'Inter', monospace;">{{ candidate.raw_text }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

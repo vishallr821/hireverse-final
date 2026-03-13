@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Upload Resume{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center py-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="text-center mb-4">
+            <h1 class="hv-page-title">Upload Candidate Resume</h1>
+            <p class="hv-page-subtitle">Supports PDF and DOCX formats</p>
+        </div>
+
+        <div class="hv-card">
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+                <div class="hv-upload-zone mb-4" onclick="document.getElementById('id_resume_file').click()">
+                    <i class="bi bi-cloud-upload hv-upload-icon"></i>
+                    <h4>Drag & drop resume here</h4>
+                    <p class="text-muted small">or click to browse · PDF and DOCX only</p>
+                    <input type="file" name="resume_file" id="id_resume_file" accept=".pdf,.docx" class="d-none" onchange="updateFileName(this)">
+                    <div id="file-name" class="mt-2 fw-bold text-primary"></div>
+                </div>
+
+                <button type="submit" class="hv-btn hv-btn-primary w-100 justify-content-center py-3">
+                    <i class="bi bi-lightning-charge"></i> Parse Resume
+                </button>
+            </form>
+        </div>
+
+        <div class="hv-alert hv-alert-info mt-4">
+            <i class="bi bi-info-circle"></i>
+            <div>
+                Resume will be automatically parsed for skills, contact info, and embedded for AI matching.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateFileName(input) {
+        const fileNameDiv = document.getElementById('file-name');
+        if (input.files && input.files[0]) {
+            fileNameDiv.textContent = "Selected: " + input.files[0].name;
+            fileNameDiv.classList.add('animate__animated', 'animate__fadeIn');
+        }
+    }
+
+    // Drag and drop handling
+    const zone = document.querySelector('.hv-upload-zone');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        zone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        zone.addEventListener(eventName, () => zone.style.background = '#dbeafe', false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        zone.addEventListener(eventName, () => zone.style.background = 'var(--primary-light)', false);
+    });
+
+    zone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        document.getElementById('id_resume_file').files = files;
+        updateFileName(document.getElementById('id_resume_file'));
+    }
+</script>
+
+{% endblock %}

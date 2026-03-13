@@ -1,0 +1,146 @@
+{% extends "tests/base_test.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-trophy"></i> Final Assessment Results</h3>
+                </div>
+                <div class="card-body p-5">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Candidate Information</h5>
+                            <p><strong>Name:</strong> {{ test.candidate.name }}</p>
+                            <p><strong>Email:</strong> {{ test.candidate.email }}</p>
+                            <p><strong>Position:</strong> {{ test.job.title }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            {% if final_result %}
+                            <h2 class="text-primary">{{ final_result.overall_score|floatformat:1 }}%</h2>
+                            <p class="text-muted">Overall Score</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Round 1: Aptitude & Technical Test -->
+                    <div class="mb-4">
+                        <h4><i class="bi bi-1-circle"></i> Round 1: Aptitude & Technical Test</h4>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5>Aptitude</h5>
+                                        <h3 class="text-info">{{ test.aptitude_score|floatformat:1 }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5>Technical</h5>
+                                        <h3 class="text-info">{{ test.technical_score|floatformat:1 }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Total</h5>
+                                        <h3>{{ test.total_score|floatformat:1 }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if test.proctoring_terminated %}
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle"></i> Test terminated due to proctoring violations
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Round 2: DSA Coding Round -->
+                    {% if dsa_session %}
+                    <div class="mb-4">
+                        <h4><i class="bi bi-2-circle"></i> Round 2: DSA Coding Round</h4>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5>Problems Solved</h5>
+                                        <h3 class="text-success">{{ dsa_session.problems_solved }} / {{ dsa_session.problems_attempted }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5>DSA Score</h5>
+                                        <h3>{{ dsa_session.total_dsa_score|floatformat:1 }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5>Status</h5>
+                                        <span class="badge bg-{{ dsa_session.status }} fs-5">{{ dsa_session.get_status_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if dsa_session.proctoring_terminated %}
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle"></i> DSA round terminated due to proctoring violations
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> DSA Coding Round not yet completed
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <!-- Final Recommendation -->
+                    {% if final_result %}
+                    <div class="text-center mt-4">
+                        {% if final_result.overall_score >= 70 %}
+                        <div class="alert alert-success">
+                            <h4><i class="bi bi-check-circle"></i> Recommended for Hire</h4>
+                            <p>Excellent performance across both rounds!</p>
+                        </div>
+                        {% elif final_result.overall_score >= 50 %}
+                        <div class="alert alert-warning">
+                            <h4><i class="bi bi-dash-circle"></i> Consider for Interview</h4>
+                            <p>Good performance, further evaluation recommended.</p>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            <h4><i class="bi bi-x-circle"></i> Not Recommended</h4>
+                            <p>Performance below threshold.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'tests:all_final_results' %}" class="btn btn-primary btn-lg">
+                            View All Results
+                        </a>
+                        <a href="{% url 'tests:test_list' %}" class="btn btn-secondary btn-lg">
+                            Back to Tests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

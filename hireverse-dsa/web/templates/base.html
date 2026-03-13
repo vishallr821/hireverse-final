@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HireVerse DSA Evaluation</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0F1117',
+                        darkCard: '#1A1D24',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #0F1117; 
+            color: #ffffff; 
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F1117; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D3748; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4A5568; 
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-white min-h-screen flex flex-col font-sans antialiased">
+    <!-- Navbar -->
+    <nav class="border-b border-gray-800 bg-darkCard px-6 py-4 flex justify-between items-center z-50 shadow-sm relative">
+        <div class="text-2xl font-bold tracking-tight text-white flex items-center gap-2 select-none">
+            <a href="/dsa/problems" class="flex items-center gap-2 hover:opacity-80 transition">
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-lg shadow-lg shadow-teal-500/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                </div>
+                HireVerse
+            </a>
+        </div>
+        <div id="nav-user-area" class="flex items-center gap-4">
+            <!-- Populated by JS -->
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col relative w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global App Scripts -->
+    <script>
+        // Authentication has been removed. Integration point for tracking candidate.
+    </script></body>
+</html>

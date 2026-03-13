@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HireVerse - {% block title %}AI Recruitment Platform{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a6fd4;
+      --primary-dark: #1456a8;
+      --primary-light: #e8f1fb;
+      --primary-mid: #b8d4f5;
+      --accent: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --bg-page: #f0f6ff;
+      --bg-card: #ffffff;
+      --border: #dbeafe;
+      --border-strong: #93c5fd;
+      --shadow-sm: 0 1px 3px rgba(26,111,212,0.08);
+      --shadow-md: 0 4px 16px rgba(26,111,212,0.12);
+      --shadow-lg: 0 8px 32px rgba(26,111,212,0.16);
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* ── NAVBAR ── */
+    .hv-navbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hv-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .hv-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1a6fd4, #0ea5e9);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .hv-logo-text {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .hv-logo-text span {
+      color: var(--accent);
+    }
+
+    .hv-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .hv-nav-links a {
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hv-nav-links a:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .hv-nav-links a.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .hv-nav-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 20px;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .hv-page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 2rem;
+    }
+
+    /* ── PAGE HEADER ── */
+    .hv-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .hv-page-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .hv-page-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 4px 0 0 0;
+    }
+
+    /* ── CARDS ── */
+    .hv-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s;
+    }
+
+    .hv-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .hv-card-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── STAT CARDS ── */
+    .hv-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hv-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .hv-stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 1rem;
+    }
+
+    .hv-stat-icon.blue { 
+      background: var(--primary-light); 
+      color: var(--primary); 
+    }
+    .hv-stat-icon.green { 
+      background: #d1fae5; 
+      color: var(--success); 
+    }
+    .hv-stat-icon.amber { 
+      background: #fef3c7; 
+      color: var(--warning); 
+    }
+    .hv-stat-icon.sky { 
+      background: #e0f2fe; 
+      color: var(--accent); 
+    }
+
+    .hv-stat-value {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .hv-stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── BUTTONS ── */
+    .hv-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .hv-btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .hv-btn-primary:hover {
+      background: var(--primary-dark);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26,111,212,0.3);
+    }
+
+    .hv-btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--border-strong);
+    }
+    .hv-btn-outline:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .hv-btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .hv-btn-success:hover {
+      background: #059669;
+      color: white;
+    }
+
+    .hv-btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .hv-btn-sm {
+      padding: 6px 14px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    /* ── BADGES ── */
+    .hv-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .hv-badge-blue { 
+      background: var(--primary-light); 
+      color: var(--primary); 
+    }
+    .hv-badge-green { 
+      background: #d1fae5; 
+      color: #065f46; 
+    }
+    .hv-badge-amber { 
+      background: #fef3c7; 
+      color: #92400e; 
+    }
+    .hv-badge-red { 
+      background: #fee2e2; 
+      color: #991b1b; 
+    }
+    .hv-badge-sky { 
+      background: #e0f2fe; 
+      color: #0369a1; 
+    }
+
+    /* ── SKILL TAGS ── */
+    .hv-skill-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      margin: 2px;
+    }
+
+    /* ── TABLE ── */
+    .hv-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .hv-table thead th {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-strong);
+    }
+
+    .hv-table tbody tr {
+      transition: background 0.15s;
+    }
+
+    .hv-table tbody tr:hover {
+      background: var(--primary-light);
+    }
+
+    .hv-table tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+
+    /* ── AVATAR ── */
+    .hv-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .hv-progress {
+      height: 8px;
+      background: var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      width: 120px;
+    }
+
+    .hv-progress-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    /* ── SEARCH INPUT ── */
+    .hv-search {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      gap: 8px;
+      width: 280px;
+      transition: border-color 0.2s;
+    }
+
+    .hv-search:focus-within {
+      border-color: var(--primary);
+    }
+
+    .hv-search input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      color: var(--text-primary);
+      width: 100%;
+    }
+
+    .hv-search i {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    /* ── FORM INPUTS ── */
+    .hv-form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .hv-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .hv-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--text-primary);
+      background: var(--bg-card);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .hv-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,111,212,0.1);
+    }
+
+    textarea.hv-input {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    /* ── PIPELINE STEPS ── */
+    .hv-pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 2rem;
+    }
+
+    .hv-pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      position: relative;
+    }
+
+    .hv-pipeline-step.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--border-strong);
+    }
+
+    .hv-pipeline-step.done {
+      background: #d1fae5;
+      color: #065f46;
+      border-color: #6ee7b7;
+    }
+
+    /* ── ALERTS ── */
+    .hv-alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .hv-alert-info {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--border-strong);
+    }
+
+    .hv-alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+
+    /* ── MODAL ── */
+    .modal-content {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+      background: var(--primary-light);
+      border-bottom: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .modal-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+    }
+
+    /* ── RANK NUMBER ── */
+    .hv-rank {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .hv-rank-1 { 
+      background: #fef3c7; 
+      color: #92400e; 
+    }
+    .hv-rank-2 { 
+      background: #f1f5f9; 
+      color: #475569; 
+    }
+    .hv-rank-3 { 
+      background: #fde8d8; 
+      color: #9a3412; 
+    }
+    .hv-rank-n { 
+      background: var(--primary-light); 
+      color: var(--primary); 
+    }
+
+    /* ── SCORE DISPLAY ── */
+    .hv-score {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--primary);
+    }
+
+    /* ── EMPTY STATE ── */
+    .hv-empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .hv-empty-icon {
+      font-size: 48px;
+      margin-bottom: 1rem;
+      color: var(--border-strong);
+    }
+
+    /* ── UPLOAD ZONE ── */
+    .hv-upload-zone {
+      border: 2px dashed var(--border-strong);
+      border-radius: 16px;
+      padding: 3rem;
+      text-align: center;
+      background: var(--primary-light);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .hv-upload-zone:hover {
+      border-color: var(--primary);
+      background: #dbeafe;
+    }
+
+    .hv-upload-icon {
+      font-size: 48px;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    /* ── STATUS DOT ── */
+    .hv-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .hv-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .hv-status-active::before { background: var(--success); }
+    .hv-status-pending::before { background: var(--warning); }
+    .hv-status-completed::before { background: var(--primary); }
+    .hv-status-expired::before { background: var(--danger); }
+
+    /* ── BACK LINK ── */
+    .hv-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+
+    .hv-back:hover { color: var(--primary); }
+
+    /* ── DIVIDER ── */
+    .hv-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* ── MESSAGES ── */
+    .hv-messages {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hv-toast {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .hv-toast-success { 
+      background: white; 
+      border-left: 4px solid var(--success); 
+      color: var(--text-primary);
+    }
+    .hv-toast-error { 
+      background: white; 
+      border-left: 4px solid var(--danger); 
+      color: var(--text-primary);
+    }
+    .hv-toast-warning { 
+      background: white; 
+      border-left: 4px solid var(--warning); 
+      color: var(--text-primary);
+    }
+    .hv-toast-info { 
+      background: white; 
+      border-left: 4px solid var(--primary); 
+      color: var(--text-primary);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hv-page { padding: 1rem; }
+      .hv-navbar { padding: 0 1rem; }
+      .hv-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    }
+
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="hv-navbar">
+    <a href="{% url 'resumes:dashboard' %}" class="hv-logo">
+      <div class="hv-logo-icon">
+        <i class="bi bi-stars"></i>
+      </div>
+      <span class="hv-logo-text">Hire<span>Verse</span></span>
+    </a>
+
+    <ul class="hv-nav-links">
+      <li>
+        <a href="{% url 'resumes:dashboard' %}">
+          <i class="bi bi-grid-1x2"></i> Dashboard
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'resumes:upload_resume' %}">
+          <i class="bi bi-cloud-upload"></i> Upload
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'resumes:candidate_list' %}">
+          <i class="bi bi-people"></i> Candidates
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'jobs:job_list' %}">
+          <i class="bi bi-briefcase"></i> Jobs
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'tests:test_list' %}">
+          <i class="bi bi-clipboard-check"></i> Tests
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'jobs:job_list' %}" 
+           class="hv-btn hv-btn-primary hv-btn-sm"
+           style="margin-left: 8px;">
+          <i class="bi bi-trophy"></i> Rankings
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- TOAST MESSAGES -->
+  {% if messages %}
+  <div class="hv-messages">
+    {% for message in messages %}
+    <div class="hv-toast hv-toast-{{ message.tags }}">
+      {% if message.tags == 'success' %}
+        <i class="bi bi-check-circle-fill" style="color:var(--success)"></i>
+      {% elif message.tags == 'error' %}
+        <i class="bi bi-x-circle-fill" style="color:var(--danger)"></i>
+      {% else %}
+        <i class="bi bi-info-circle-fill" style="color:var(--primary)"></i>
+      {% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- PAGE CONTENT -->
+  <main class="hv-page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

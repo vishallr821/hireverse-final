@@ -1,0 +1,14 @@
+django>=4.2
+pdfplumber
+python-docx
+sentence-transformers
+chromadb
+transformers
+accelerate
+torch
+numpy
+python-dotenv
+Pillow
+huggingface_hub
+groq
+opencv-python

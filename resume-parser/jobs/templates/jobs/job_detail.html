@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }}{% endblock %}
+{% block content %}
+
+<a href="{% url 'jobs:job_list' %}" class="hv-back">
+    <i class="bi bi-arrow-left"></i> Back to Jobs
+</a>
+
+<!-- PAGE HEADER -->
+<div class="hv-page-header pb-2">
+    <div>
+        <h1 class="hv-page-title">{{ job.title }}</h1>
+        <div class="hv-status hv-status-active mt-2">Currently Active</div>
+    </div>
+    <div>
+        <form method="post" action="{% url 'jobs:trigger_ranking' job.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="hv-btn hv-btn-primary">
+                <i class="bi bi-lightning-fill"></i> Rank Candidates
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- LEFT: Description -->
+    <div class="col-md-8">
+        <div class="hv-card h-100">
+            <h3 class="hv-card-title"><i class="bi bi-text-left"></i> Job Description</h3>
+            <div class="text-secondary mb-4" style="line-height: 1.7; white-space: pre-wrap;">{{ job.description }}</div>
+            
+            <hr class="hv-divider">
+            
+            <h6 class="hv-label mb-3">Required Skills</h6>
+            <div class="d-flex flex-wrap gap-1">
+                {% for skill in job.required_skills_list %}
+                    <span class="hv-skill-tag">{{ skill }}</span>
+                {% empty %}
+                    <span class="text-muted italic">No specific skills listed.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Stats -->
+    <div class="col-md-4">
+        <div class="hv-card">
+            <h3 class="hv-card-title"><i class="bi bi-graph-up"></i> Job Stats</h3>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Candidates Ranked</span>
+                    <span class="fw-bold">{{ job.ranking_set.count }}</span>
+                </div>
+                <div class="d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Highest Score</span>
+                    <span class="fw-bold text-success">{{ max_score|default:"0.0" }}%</span>
+                </div>
+                <div class="d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Created Date</span>
+                    <span class="fw-bold">{{ job.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RANKINGS LIST -->
+{% if job.ranking_set.exists %}
+<div class="hv-card mt-4">
+    <h3 class="hv-card-title"><i class="bi bi-list-stars"></i> Top Candidate Match Rankings</h3>
+    <div class="table-responsive">
+        <table class="hv-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Candidate</th>
+                    <th>Match Score</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ranking in job.ranking_set.all|dictsort:"rank_position" %}
+                <tr>
+                    <td>
+                        <div class="hv-rank {% if ranking.rank_position == 1 %}hv-rank-1{% elif ranking.rank_position == 2 %}hv-rank-2{% elif ranking.rank_position == 3 %}hv-rank-3{% else %}hv-rank-n{% endif %}">
+                            {{ ranking.rank_position }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="hv-avatar d-inline-flex me-2" style="width: 24px; height: 24px; font-size: 10px;">{{ ranking.candidate.name|slice:":1" }}</div>
+                        <strong>{{ ranking.candidate.name }}</strong>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="hv-progress" style="width: 80px;">
+                                <div class="hv-progress-fill" style="width: {{ ranking.final_score }}%"></div>
+                            </div>
+                            <span class="fw-bold">{{ ranking.final_score }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if ranking.recommendation == "Strong Yes" %}
+                            <span class="hv-badge hv-badge-green">Strong Yes</span>
+                        {% elif ranking.recommendation == "Yes" %}
+                            <span class="hv-badge hv-badge-blue">Yes</span>
+                        {% elif ranking.recommendation == "Maybe" %}
+                            <span class="hv-badge hv-badge-amber">Maybe</span>
+                        {% else %}
+                            <span class="hv-badge hv-badge-red">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'resumes:candidate_detail' ranking.candidate.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">Profile</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

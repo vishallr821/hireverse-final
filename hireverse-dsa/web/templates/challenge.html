@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-69px)] w-full overflow-hidden bg-darkBg">
+    <!-- Top Bar -->
+    <div class="border-b border-gray-800 bg-[#1A1D24] px-4 sm:px-8 py-3 flex justify-between items-center shadow-lg shadow-black/20 z-10 shrink-0">
+        <div class="flex items-center gap-4">
+            <h1 id="prob-title" class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Loading Challenge...</h1>
+            <span id="prob-diff" class="text-[11px] font-bold px-2.5 py-1 rounded-md border text-gray-400 bg-gray-900 border-gray-700 uppercase tracking-widest shadow-sm">--</span>
+            
+            <!-- Mobile Toggle -->
+            <button id="mobile-toggle" class="md:hidden ml-auto text-gray-400 hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+        
+        <div class="hidden md:flex">
+            <div id="dsa-score-chip" class="px-5 py-2 rounded-xl bg-gray-900 border border-gray-700 font-mono text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] text-gray-300 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                DSA Score: <span class="text-white font-extrabold text-base ml-1">--/100</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Split Layout -->
+    <div class="flex flex-row flex-grow overflow-hidden w-full relative">
+        
+        <!-- LEFT PANEL (Problem View) -->
+        <div id="left-panel" class="w-full md:w-[40%] lg:w-[35%] border-r border-gray-800 bg-[#0F1117] flex flex-col z-0 md:relative absolute inset-0 md:inset-auto md:translate-x-0 transition-transform duration-300 overflow-y-auto custom-scrollbar shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+            <div class="p-6 sm:p-8 space-y-10 flex-grow">
+                <!-- Section 1 -->
+                <section>
+                    <h2 class="text-xs font-black uppercase tracking-widest mb-4 text-gray-500 flex items-center relative">
+                        Problem Statement
+                        <div class="absolute left-0 -bottom-2 w-8 h-0.5 bg-gray-700"></div>
+                    </h2>
+                    <div id="prob-stmt" class="text-gray-300 text-[15px] leading-relaxed whitespace-pre-line font-medium mt-6"></div>
+                </section>
+
+                <!-- Section 2 -->
+                <section>
+                    <h2 class="text-xs font-black uppercase tracking-widest mb-4 text-gray-500 flex items-center relative">
+                        Examples
+                        <div class="absolute left-0 -bottom-2 w-8 h-0.5 bg-gray-700"></div>
+                    </h2>
+                    <div id="prob-examples" class="space-y-6 mt-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Section 3 -->
+                <section class="pb-8">
+                    <h2 class="text-xs font-black uppercase tracking-widest mb-6 text-gray-500 flex justify-between items-center relative">
+                        AI Mentorship
+                        <div class="absolute left-0 -bottom-2 w-8 h-0.5 bg-gray-700"></div>
+                        <div class="flex gap-2" id="hint-dots">
+                            <div class="w-2.5 h-2.5 rounded-full border border-gray-600 transition-colors"></div>
+                            <div class="w-2.5 h-2.5 rounded-full border border-gray-600 transition-colors"></div>
+                            <div class="w-2.5 h-2.5 rounded-full border border-gray-600 transition-colors"></div>
+                            <div class="w-2.5 h-2.5 rounded-full border border-gray-600 transition-colors"></div>
+                        </div>
+                    </h2>
+                    
+                    <button id="btn-hint" class="flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent border-2 border-amber-500/50 hover:border-amber-400 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-xl text-sm transition-all font-bold w-full shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Get Hint (Level 1)
+                    </button>
+                    
+                    <div id="hint-container" class="mt-4 space-y-3">
+                        <!-- Hints appended here -->
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Mobile Score (Bottom) -->
+            <div class="md:hidden p-4 border-t border-gray-800 bg-[#1A1D24]">
+                <div class="px-5 py-2 whitespace-nowrap rounded-xl bg-gray-900 border border-gray-700 font-mono text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] text-gray-300 flex items-center justify-center gap-2">
+                    DSA Score: <span id="mobile-dsa-score" class="text-white font-extrabold text-base ml-1 shrink-0">--/100</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL (Editor & Results) -->
+        <div class="w-full md:w-[60%] lg:w-[65%] flex flex-col bg-[#1A1D24] relative z-0 min-w-0">
+            <!-- Editor Top Bar -->
+            <div class="border-b border-gray-800 px-4 py-2 bg-[#0F1117] flex justify-between items-center shadow-sm z-10 shrink-0">
+                <div class="flex gap-2 bg-[#1A1D24] p-1 rounded-lg border border-gray-800" id="lang-toggle">
+                    <button data-lang="python" class="px-5 py-1.5 text-sm rounded-md bg-teal-600 text-white font-bold transition-all shadow-md">Python</button>
+                    <button data-lang="java" class="px-5 py-1.5 text-sm rounded-md bg-transparent text-gray-400 hover:text-gray-200 font-bold transition-all">Java</button>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button id="btn-reset" class="p-2 text-gray-500 hover:text-gray-300 transition-colors" title="Reset Code">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Monaco Editor Container -->
+            <div id="editor-container" class="w-full h-[55%] relative shrink-0"></div>
+            
+            <!-- Action Bar -->
+            <div class="px-6 py-4 bg-[#0F1117] flex items-center justify-between border-y border-gray-800 shadow-lg z-10 shrink-0">
+                <div class="text-[11px] font-bold text-gray-500 font-mono tracking-widest hidden sm:block uppercase">Ready for evaluation</div>
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <span id="run-spinner" class="hidden shrink-0">
+                        <svg class="animate-spin h-5 w-5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </span>
+                    <button id="btn-run" class="flex-grow sm:flex-grow-0 px-8 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold tracking-wide shadow-[0_0_15px_rgba(13,148,136,0.2)] hover:shadow-[0_0_20px_rgba(13,148,136,0.4)] transition-all duration-200 outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-[#0F1117] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Run Tests
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="flex-grow overflow-y-auto px-6 py-8 bg-[#1A1D24] hidden relative z-0 custom-scrollbar">
+                
+                <!-- Stats Bar -->
+                <div id="res-stats-bar" class="px-5 py-4 rounded-xl mb-6 flex flex-col md:flex-row md:justify-between items-start md:items-center font-mono text-sm font-bold border gap-3 transition-colors">
+                    <!-- Added by JS -->
+                </div>
+
+                <!-- Complexity Badge Row -->
+                <div id="complexity-row" class="flex gap-4 mb-8">
+                    <!-- Added by JS -->
+                </div>
+
+                <!-- Test Cases List -->
+                <div class="mb-10">
+                    <h3 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-5 flex items-center relative">
+                        Execution Results
+                        <div class="absolute left-0 -bottom-2 w-8 h-0.5 bg-gray-700"></div>
+                    </h3>
+                    <div id="test-cases-list" class="space-y-4">
+                        <!-- Loaded by JS -->
+                    </div>
+                </div>
+
+                <!-- Follow Up Card -->
+                <div id="follow-up-card" class="mb-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-900/5 border border-amber-500/30 overflow-hidden shadow-lg hidden">
+                    <div class="px-5 py-3 border-b border-amber-500/20 bg-amber-500/5">
+                        <div class="text-amber-500 text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"></path></svg>
+                            Interview Follow-up
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div id="follow-up-text" class="text-white text-sm font-semibold leading-relaxed"></div>
+                    </div>
+                </div>
+
+                <!-- AI Feedback Card -->
+                <div class="rounded-2xl border border-gray-700 bg-gray-900/50 overflow-hidden mb-8 shadow-lg">
+                    <button class="w-full px-5 py-4 flex justify-between items-center bg-gray-800 hover:bg-gray-700/80 transition-colors z-10 relative" onclick="document.getElementById('ai-feedback-body').classList.toggle('hidden'); document.getElementById('fb-arrow').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-3 text-white font-bold text-sm tracking-wide">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </span>
+                            AI Feedback Analysis
+                        </div>
+                        <div class="p-1 rounded-full bg-gray-900 border border-gray-700">
+                            <svg id="fb-arrow" class="w-4 h-4 text-gray-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </button>
+                    <div id="ai-feedback-body" class="p-6 text-gray-300 text-[15px] leading-relaxed whitespace-pre-line border-t border-gray-800 bg-[#1A1D24]">
+                        <!-- text -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<script src="/static/js/challenge.js"></script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Test Invite Ready{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center py-5">
+    <div class="col-md-8 col-lg-6 text-center">
+        <div class="mb-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 64px;"></i>
+        </div>
+        
+        <h2 class="hv-page-title mb-2">Test Invite Ready!</h2>
+        <p class="text-muted mb-4 shadow-sm p-2 rounded bg-white">
+            Send this assessment link to <strong>{{ test.candidate.name }}</strong> for the <strong>{{ test.job.title }}</strong> role.
+        </p>
+
+        <div class="hv-card text-start">
+            <div class="mb-4">
+                <label class="hv-label">Assessment Link</label>
+                <div class="p-3 rounded border bg-light d-flex align-items-center gap-2">
+                    <code class="text-primary small flex-grow-1" id="inviteLink">http://{{ request.get_host }}{% url 'tests:take_test' test.invite_token %}</code>
+                    <button class="btn btn-sm btn-link p-0 text-primary" onclick="copyLink()">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="hv-btn hv-btn-primary w-100 justify-content-center py-3" onclick="copyLink()" id="copyBtn">
+                <i class="bi bi-clipboard-check me-2"></i> Copy Invite Link
+            </button>
+        </div>
+
+        <div class="hv-alert hv-alert-info mt-4 text-start">
+            <i class="bi bi-info-circle"></i>
+            <div>
+                The link is unique to this candidate. The assessment will expire 30 minutes after they begin the test.
+            </div>
+        </div>
+        
+        {% if already_exists %}
+        <div class="hv-alert hv-alert-warning mt-3 text-start">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>Note: A test already exists for this candidate/job combination. Showing the existing invite.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function copyLink() {
+        const linkText = document.getElementById('inviteLink').innerText;
+        navigator.clipboard.writeText(linkText).then(() => {
+            const btn = document.getElementById('copyBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2"></i> Copied to Clipboard!';
+            btn.classList.add('hv-btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.remove('hv-btn-success');
+            }, 2000);
+        });
+    }
+</script>
+
+{% endblock %}

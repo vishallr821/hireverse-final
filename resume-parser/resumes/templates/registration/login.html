@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Login - HireVerse{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: calc(100vh - 150px);">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-5">
+            <div class="hv-logo-icon mx-auto mb-3" style="width: 56px; height: 56px; font-size: 28px;">
+                <i class="bi bi-stars"></i>
+            </div>
+            <h1 class="hv-logo-text fs-2">Hire<span>Verse</span></h1>
+            <p class="text-muted">Enterprise AI Recruitment Platform</p>
+        </div>
+
+        <div class="hv-card shadow-lg">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="hv-alert hv-alert-danger mb-4 py-2 small">
+                   <i class="bi bi-exclamation-circle"></i> Invalid username or password.
+                </div>
+                {% endif %}
+
+                <div class="hv-form-group">
+                    <label for="id_username" class="hv-label">Username</label>
+                    <div class="position-relative">
+                        <i class="bi bi-person position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" name="username" id="id_username" class="hv-input ps-5" required placeholder="Enter username">
+                    </div>
+                </div>
+
+                <div class="hv-form-group">
+                    <label for="id_password" class="hv-label">Password</label>
+                    <div class="position-relative">
+                        <i class="bi bi-lock position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="password" name="password" id="id_password" class="hv-input ps-5" required placeholder="Enter password">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember">
+                        <label class="form-check-label small text-muted" for="remember">Remember me</label>
+                    </div>
+                    <a href="#" class="small text-primary text-decoration-none fw-bold">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="hv-btn hv-btn-primary w-100 justify-content-center py-2 fs-5">
+                    Sign In <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </form>
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="text-muted small">© 2026 HireVerse AI. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hide the default navbar for login page for cleaner look */
+    .hv-navbar { display: none; }
+    body { background: linear-gradient(135deg, #f0f6ff 0%, #e8f1fb 100%); }
+</style>
+{% endblock %}

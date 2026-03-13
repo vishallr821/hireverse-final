@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Candidates{% endblock %}
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="hv-page-header">
+    <div>
+        <h1 class="hv-page-title">Candidates <span class="hv-nav-badge ms-2">{{ candidates.count }}</span></h1>
+        <p class="hv-page-subtitle">Manage and view all applicant profiles</p>
+    </div>
+    <div class="d-flex gap-3 align-items-center">
+        <div class="hv-search d-none d-md-flex">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search candidates...">
+        </div>
+        <a href="{% url 'resumes:upload_resume' %}" class="hv-btn hv-btn-primary">
+            <i class="bi bi-plus-lg"></i> Upload
+        </a>
+    </div>
+</div>
+
+<div class="hv-card">
+    <div class="table-responsive">
+        <table class="hv-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Skills</th>
+                    <th>Uploaded</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for candidate in candidates %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="hv-avatar">
+                                {{ candidate.name|slice:":1" }}
+                            </div>
+                            <div class="fw-bold">{{ candidate.name }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small fw-500">{{ candidate.email|default:"No email" }}</div>
+                        <div class="text-muted small">{{ candidate.phone|default:"No phone" }}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1" style="max-width: 250px;">
+                            {% for skill in candidate.parsed_skills|slice:":4" %}
+                                <span class="hv-skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                            {% if candidate.parsed_skills|length > 4 %}
+                                <span class="text-muted small align-self-center ms-1">+{{ candidate.parsed_skills|length|add:"-4" }} more</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small">{{ candidate.uploaded_at|date:"M d, Y" }}</div>
+                    </td>
+                    <td>
+                        {% if candidate.embedding %}
+                            <span class="hv-badge hv-badge-green">Embedded</span>
+                        {% else %}
+                            <span class="hv-badge hv-badge-amber">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'resumes:candidate_detail' candidate.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="hv-empty">
+                        <div class="hv-empty-icon"><i class="bi bi-people"></i></div>
+                        <h4>No candidates found</h4>
+                        <p>Upload a resume to get started with HireVerse.</p>
+                        <a href="{% url 'resumes:upload_resume' %}" class="hv-btn hv-btn-primary mt-3">Upload Now</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

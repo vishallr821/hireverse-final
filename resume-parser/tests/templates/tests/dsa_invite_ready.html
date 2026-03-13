@@ -1,0 +1,59 @@
+{% extends "tests/base_test.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-code-square"></i> DSA Coding Round</h4>
+                </div>
+                <div class="card-body p-5">
+                    <div class="alert alert-success">
+                        <h5><i class="bi bi-check-circle"></i> Congratulations!</h5>
+                        <p>{{ test.candidate.name }} has qualified for the DSA Coding Round!</p>
+                        <p><strong>Test Score:</strong> {{ test.total_score }}%</p>
+                    </div>
+
+                    <h5 class="mt-4">DSA Round Details:</h5>
+                    <ul>
+                        <li>Solve coding problems</li>
+                        <li>Multiple programming languages supported</li>
+                        <li>Real-time code execution</li>
+                        <li>AI-powered feedback</li>
+                        <li>Proctored session</li>
+                    </ul>
+
+                    <div class="alert alert-info mt-4">
+                        <strong>Invitation Link:</strong>
+                        <div class="input-group mt-2">
+                            <input type="text" class="form-control" value="{{ invite_url }}" id="dsa-link" readonly>
+                            <button class="btn btn-primary" onclick="copyLink()">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ invite_url }}" class="btn btn-success btn-lg" target="_blank">
+                            <i class="bi bi-play-circle"></i> Start DSA Round
+                        </a>
+                        <a href="{% url 'tests:test_list' %}" class="btn btn-secondary btn-lg">
+                            Back to Tests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    const link = document.getElementById('dsa-link');
+    link.select();
+    document.execCommand('copy');
+    alert('Link copied to clipboard!');
+}
+</script>
+{% endblock %}

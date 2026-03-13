@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic[email]
+python-jose[cryptography]
+passlib
+bcrypt==3.2.0
+python-dotenv
+docker
+groq
+redis
+jinja2
+httpx
+aiosqlite

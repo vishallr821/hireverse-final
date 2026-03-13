@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="hv-page-header">
+    <div>
+        <h1 class="hv-page-title">Welcome to HireVerse</h1>
+        <p class="hv-page-subtitle">AI-Powered End-to-End Recruitment Platform</p>
+    </div>
+    <a href="{% url 'resumes:upload_resume' %}" class="hv-btn hv-btn-primary">
+        <i class="bi bi-cloud-upload"></i> Upload Resume
+    </a>
+</div>
+
+<!-- STATS ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-icon blue">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="hv-stat-value">{{ total_candidates }}</div>
+            <div class="hv-stat-label">Total Candidates</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-icon green">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="hv-stat-value">{{ total_jobs }}</div>
+            <div class="hv-stat-label">Total Jobs</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-icon amber">
+                <i class="bi bi-bar-chart-fill"></i>
+            </div>
+            <div class="hv-stat-value">{{ total_rankings }}</div>
+            <div class="hv-stat-label">Resumes Ranked</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-icon sky">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+            <div class="hv-stat-value">{% if top_score %}{{ top_score|floatformat:0 }}{% else %}0{% endif %}%</div>
+            <div class="hv-stat-label">Top Score %</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- RECENT UPLOADS -->
+    <div class="col-md-8">
+        <div class="hv-card h-100">
+            <h3 class="hv-card-title">
+                <i class="bi bi-clock-history"></i> Recent Uploads
+            </h3>
+            <div class="table-responsive">
+                <table class="hv-table">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Skills</th>
+                            <th>Uploaded</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in recent_candidates %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="hv-avatar">
+                                        {{ candidate.name|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ candidate.name }}</div>
+                                        <div class="text-muted small">{{ candidate.email|default:"No email" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="hv-badge hv-badge-blue">
+                                    {{ candidate.parsed_skills|length }} Skills
+                                </span>
+                            </td>
+                            <td>{{ candidate.uploaded_at|timesince }} ago</td>
+                            <td>
+                                <a href="{% url 'resumes:candidate_detail' candidate.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="hv-empty">
+                                <i class="bi bi-inbox hv-empty-icon d-block"></i>
+                                No candidates uploaded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE JOBS -->
+    <div class="col-md-4">
+        <div class="hv-card">
+            <h3 class="hv-card-title">
+                <i class="bi bi-briefcase"></i> Active Jobs
+            </h3>
+            <div class="d-flex flex-column gap-3 mb-4">
+                {% for job in active_jobs %}
+                <div class="p-3 rounded border border-light bg-light">
+                    <div class="fw-bold mb-1">{{ job.title }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">{{ job.ranking_set.count }} candidates</span>
+                        <a href="{% url 'ranking:ranking_results' job.pk %}" class="text-primary small text-decoration-none fw-bold">Rankings →</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-3 text-muted">No active jobs found.</div>
+                {% endfor %}
+            </div>
+            <a href="{% url 'jobs:job_create' %}" class="hv-btn hv-btn-primary w-100 justify-content-center">
+                <i class="bi bi-plus-lg"></i> Create New Job
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- TOP RANKED CANDIDATES -->
+<div class="hv-card">
+    <h3 class="hv-card-title">
+        <i class="bi bi-trophy"></i> Top Ranked Candidates
+    </h3>
+    <div class="table-responsive">
+        <table class="hv-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Candidate</th>
+                    <th>Job Role</th>
+                    <th>Score</th>
+                    <th>Recommendation</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ranking in top_rankings %}
+                <tr>
+                    <td>
+                        <div class="hv-rank {% if forloop.counter == 1 %}hv-rank-1{% elif forloop.counter == 2 %}hv-rank-2{% elif forloop.counter == 3 %}hv-rank-3{% else %}hv-rank-n{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-bold">{{ ranking.candidate.name }}</div>
+                    </td>
+                    <td>{{ ranking.job.title }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="hv-progress">
+                                <div class="hv-progress-fill" style="width: {{ ranking.final_score }}%"></div>
+                            </div>
+                            <span class="hv-score">{{ ranking.final_score|floatformat:1 }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if ranking.recommendation == "Strong Yes" %}
+                            <span class="hv-badge hv-badge-green">Strong Match</span>
+                        {% elif ranking.recommendation == "Yes" %}
+                            <span class="hv-badge hv-badge-blue">Good Match</span>
+                        {% elif ranking.recommendation == "Maybe" %}
+                            <span class="hv-badge hv-badge-amber">Potential</span>
+                        {% else %}
+                            <span class="hv-badge hv-badge-red">Unlikely</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'resumes:candidate_detail' ranking.candidate.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">Profile</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="hv-empty">
+                        <i class="bi bi-diagram-3 hv-empty-icon d-block"></i>
+                        No rankings available yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Job Descriptions{% endblock %}
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="hv-page-header">
+    <div>
+        <h1 class="hv-page-title">Job Descriptions <span class="hv-nav-badge ms-2">{{ jobs.count }}</span></h1>
+        <p class="hv-page-subtitle">Manage roles and matching requirements</p>
+    </div>
+    <a href="{% url 'jobs:job_create' %}" class="hv-btn hv-btn-primary">
+        <i class="bi bi-plus-lg"></i> Create New Job
+    </a>
+</div>
+
+<div class="hv-card">
+    <div class="table-responsive">
+        <table class="hv-table">
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Required Skills</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2 fw-bold text-primary">
+                            <i class="bi bi-briefcase"></i> {{ job.title }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for skill in job.required_skills_list|slice:":3" %}
+                                <span class="hv-skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                            {% if job.required_skills_list|length > 3 %}
+                                <span class="text-muted small align-self-center ms-1">+{{ job.required_skills_list|length|add:"-3" }} more</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>{{ job.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if job.is_active %}
+                            <div class="hv-status hv-status-active">Active</div>
+                        {% else %}
+                            <div class="hv-status hv-status-pending">Inactive</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'jobs:job_detail' job.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">View</a>
+                            <form method="post" action="{% url 'jobs:trigger_ranking' job.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="hv-btn hv-btn-primary hv-btn-sm">Rank Candidates</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="hv-empty">
+                        <div class="hv-empty-icon"><i class="bi bi-briefcase"></i></div>
+                        <h4>No job descriptions yet</h4>
+                        <p>Create your first job to start matching candidates with AI.</p>
+                        <a href="{% url 'jobs:job_create' %}" class="hv-btn hv-btn-primary mt-3">Create Job</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

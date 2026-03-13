@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Candidate Assessments{% endblock %}
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="hv-page-header">
+    <div>
+        <h1 class="hv-page-title">Candidate Assessments</h1>
+        <p class="hv-page-subtitle">Track AI-generated skill evaluations</p>
+    </div>
+    <div class="hv-badge hv-badge-blue fs-6 px-3">Total Tests: {{ tests.count }}</div>
+</div>
+
+<div class="hv-card">
+    <div class="table-responsive">
+        <table class="hv-table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Job Title</th>
+                    <th>Status</th>
+                    <th>Aptitude</th>
+                    <th>Technical</th>
+                    <th>Final Score</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in tests %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="hv-avatar" style="width: 28px; height: 28px; font-size: 12px;">{{ test.candidate.name|slice:":1" }}</div>
+                            <a href="{% url 'resumes:candidate_detail' test.candidate.pk %}" class="fw-bold text-decoration-none">{{ test.candidate.name }}</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate small" style="max-width: 150px;">{{ test.job.title }}</div>
+                    </td>
+                    <td>
+                        {% if test.completed_at %}
+                            <div class="hv-status hv-status-active">Completed</div>
+                        {% elif test.started_at %}
+                            <div class="hv-status hv-status-pending text-primary">In Progress</div>
+                        {% else %}
+                            <div class="hv-status hv-status-pending">Sent/Pending</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if test.aptitude_score %}
+                            <span class="fw-bold">{{ test.aptitude_score }}%</span>
+                        {% else %}
+                            <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if test.technical_score %}
+                            <span class="fw-bold">{{ test.technical_score }}%</span>
+                        {% else %}
+                            <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if test.final_score %}
+                            <div class="hv-score">{{ test.final_score|floatformat:1 }}%</div>
+                        {% else %}
+                            <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ test.created_at|date:"M d" }}</td>
+                    <td>
+                        {% if test.completed_at %}
+                            <a href="{% url 'tests:test_result' test.invite_token %}" class="hv-btn hv-btn-primary hv-btn-sm">View Results</a>
+                        {% else %}
+                            <a href="{% url 'tests:generate_test' test.candidate.id test.job.id %}" class="hv-btn hv-btn-outline hv-btn-sm">Copy Link</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="hv-empty">No assessments created. Rank a candidate to send a test invite.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

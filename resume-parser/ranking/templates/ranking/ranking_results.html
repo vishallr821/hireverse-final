@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}AI Rankings{% endblock %}
+{% block content %}
+
+<a href="{% url 'jobs:job_list' %}" class="hv-back">
+    <i class="bi bi-arrow-left"></i> Back to Jobs
+</a>
+
+<!-- PAGE HEADER -->
+<div class="hv-page-header">
+    <div>
+        <h1 class="hv-page-title">AI Ranking Results</h1>
+        <p class="hv-page-subtitle">Candidates matched for <strong>{{ job.title }}</strong></p>
+    </div>
+    <form method="post" action="{% url 'jobs:trigger_ranking' job.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="hv-btn hv-btn-warning">
+            <i class="bi bi-arrow-clockwise"></i> Re-Rank
+        </button>
+    </form>
+</div>
+
+<!-- STATS BAR -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-label">Active Job</div>
+            <div class="fw-bold text-truncate">{{ job.title }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-label">Candidates Analyzed</div>
+            <div class="hv-stat-value text-primary fs-3">{{ rankings.count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-label">Top Compatibility</div>
+            <div class="hv-stat-value text-success fs-3">{% if rankings.0 %}{{ rankings.0.final_score }}%{% else %}0%{% endif %}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="hv-stat-card">
+            <div class="hv-stat-label">Avg Similarity</div>
+            <div class="hv-stat-value text-info fs-3">0.821</div>
+        </div>
+    </div>
+</div>
+
+<div class="hv-card">
+    <div class="table-responsive">
+        <table class="hv-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Candidate</th>
+                    <th>Compatibility</th>
+                    <th>AI Metrics</th>
+                    <th>Seniority</th>
+                    <th>Assessment</th>
+                    <th>Actions</th>
+                    <th>TEST LINK</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ranking in rankings %}
+                <tr>
+                    <td>
+                        <div class="hv-rank {% if forloop.counter == 1 %}hv-rank-1{% elif forloop.counter == 2 %}hv-rank-2{% elif forloop.counter == 3 %}hv-rank-3{% else %}hv-rank-n{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="hv-avatar" style="width: 32px; height: 32px;">{{ ranking.candidate.name|slice:":1" }}</div>
+                            <div>
+                                <div class="fw-bold">{{ ranking.candidate.name }}</div>
+                                <div class="text-muted small">{{ ranking.candidate.email|truncatechars:20 }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="hv-progress mb-1">
+                            <div class="hv-progress-fill" style="width: {{ ranking.final_score }}%"></div>
+                        </div>
+                        <div class="fw-bold text-primary">{{ ranking.final_score }}%</div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <span class="hv-badge hv-badge-sky small">Vector: {{ ranking.cosine_score|floatformat:3 }}</span>
+                            <span class="hv-badge hv-badge-blue small">LLM: {{ ranking.llm_score }}/100</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="hv-badge hv-badge-blue">{{ ranking.seniority_level|default:"Mid" }}</span>
+                    </td>
+                    <td>
+                        <div style="max-width: 250px;">
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                {% for s in ranking.strengths|slice:":2" %}
+                                    <span class="badge hv-badge-green x-small" style="font-size: 10px;">{{ s }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="text-muted x-small lh-sm">{{ ranking.reasoning|truncatechars:80 }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-2">
+                            <button class="hv-btn hv-btn-outline hv-btn-sm" data-bs-toggle="modal" data-bs-target="#reportModal{{ ranking.id }}">
+                                Full Report
+                            </button>
+                            <a href="{% url 'resumes:candidate_detail' ranking.candidate.pk %}" class="hv-btn hv-btn-outline hv-btn-sm">Profile</a>
+                        </div>
+                    </td>
+                    <td>
+                        {% with test=ranking.tests.first %}
+                        <div class="d-flex flex-column gap-1">
+                            {% if not test %}
+                                <span class="text-muted small mb-1">Not Sent</span>
+                                <a href="{% url 'tests:send_test_link' ranking.candidate.id job.id ranking.id %}" class="hv-btn hv-btn-primary hv-btn-sm text-nowrap">
+                                    <i class="bi bi-send"></i> Send Test
+                                </a>
+                            {% elif test.status == 'completed' %}
+                                <span class="hv-badge hv-badge-green">Completed</span>
+                                <div class="hv-score mt-1">{{ test.total_score }}%</div>
+                            {% elif test.status == 'sent' %}
+                                <span class="hv-badge hv-badge-blue">Sent</span>
+                                <small class="text-muted" style="font-size: 10px;">{{ test.sent_at|date:"M d, H:i" }}</small>
+                            {% elif test.status == 'active' %}
+                                <span class="hv-badge hv-badge-sky">In Progress</span>
+                            {% elif test.status == 'expired' %}
+                                <span class="hv-badge hv-badge-red">Expired</span>
+                            {% else %}
+                                <span class="hv-badge hv-badge-amber">{{ test.status|title }}</span>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                    </td>
+                </tr>
+
+                <!-- MODAL FOR CANDIDATE -->
+                <div class="modal fade" id="reportModal{{ ranking.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">AI Assessment: {{ ranking.candidate.name }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row g-4 mb-4">
+                                    <div class="col-4">
+                                        <div class="p-3 rounded bg-light text-center">
+                                            <div class="fs-2 fw-bold text-primary">{{ ranking.final_score }}%</div>
+                                            <div class="text-muted small">Compatibility</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-3 rounded bg-light text-center">
+                                            <div class="fs-2 fw-bold text-info">{{ ranking.cosine_score|floatformat:3 }}</div>
+                                            <div class="text-muted small">Vector Similarity</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-3 rounded bg-light text-center">
+                                            <div class="fs-2 fw-bold text-success">{{ ranking.llm_score }}</div>
+                                            <div class="text-muted small">LLM Grade</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="hv-label">Seniority Grade</h6>
+                                    <span class="hv-badge hv-badge-sky fs-6 px-3 py-2">{{ ranking.seniority_level }}</span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="hv-label">Match Recommendation</h6>
+                                    {% if ranking.recommendation == "Strong Yes" %}
+                                        <span class="hv-badge hv-badge-green"><i class="bi bi-check-circle me-1"></i> Highly Recommended</span>
+                                    {% else %}
+                                        <span class="hv-badge hv-badge-blue">{{ ranking.recommendation }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="hv-label text-primary">AI Reasoning</h6>
+                                    <div class="p-3 rounded border-start border-primary border-4 bg-light" style="white-space: pre-wrap;">{{ ranking.reasoning }}</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <h6 class="hv-label text-success">Key Strengths</h6>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for s in ranking.strengths %}
+                                                <span class="hv-badge hv-badge-green">{{ s }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <h6 class="hv-label text-danger">Identified Gaps</h6>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for g in ranking.skill_gaps %}
+                                                <span class="hv-badge hv-badge-red">{{ g }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <a href="{% url 'resumes:candidate_detail' ranking.candidate.pk %}" class="hv-btn hv-btn-primary">View Full Profile</a>
+                                <button type="button" class="hv-btn hv-btn-outline" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="hv-empty">No rankings found for this job.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

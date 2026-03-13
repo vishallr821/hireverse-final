@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Create Job{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center py-5">
+    <div class="col-md-9 col-lg-7">
+        <div class="text-center mb-4">
+            <h1 class="hv-page-title">Create Job Description</h1>
+            <p class="hv-page-subtitle">Define the role and AI will match the best candidates</p>
+        </div>
+
+        <div class="hv-card">
+            <form method="post">
+                {% csrf_token %}
+                <div class="hv-form-group">
+                    <label for="title" class="hv-label">Job Title</label>
+                    <input type="text" class="hv-input" id="title" name="title" required placeholder="e.g. Senior Backend Engineer">
+                </div>
+                
+                <div class="hv-form-group">
+                    <label for="required_skills" class="hv-label">Required Skills</label>
+                    <input type="text" class="hv-input" id="required_skills" name="required_skills" placeholder="Python, Django, React, PostgreSQL">
+                    <div class="form-text text-muted" style="font-size: 11px;">Comma separated list of key technologies.</div>
+                </div>
+                
+                <div class="hv-form-group">
+                    <label for="description" class="hv-label">Detailed Job Description</label>
+                    <textarea class="hv-input" id="description" name="description" rows="8" required placeholder="Describe the role, responsibilities, and qualifications..."></textarea>
+                </div>
+                
+                <div class="d-flex gap-3 pt-3">
+                    <button type="submit" class="hv-btn hv-btn-primary flex-grow-1 justify-content-center">
+                        <i class="bi bi-plus-circle"></i> Create Job & Generate Embedding
+                    </button>
+                    <a href="{% url 'jobs:job_list' %}" class="hv-btn hv-btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="hv-alert hv-alert-info mt-4">
+            <i class="bi bi-stars"></i>
+            <div>
+                Skills are used for AI embedding and candidate matching. AI will calculate compatibility scores based on these requirements.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

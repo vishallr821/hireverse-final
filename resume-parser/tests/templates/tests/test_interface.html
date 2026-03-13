@@ -1,0 +1,254 @@
+{% extends "tests/base_test.html" %}
+
+{% block extra_css %}
+<style>
+    .test-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: #ffffff;
+        border-bottom: 2px solid #1a6fd4;
+        padding: 15px 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(26,111,212,0.1);
+    }
+    .timer-text { font-size: 1.5rem; font-weight: bold; color: #1a6fd4; }
+    .option-card {
+        display: flex; align-items: center;
+        padding: 12px 16px; margin: 8px 0;
+        border: 2px solid #dbeafe;
+        border-radius: 12px; cursor: pointer;
+        background: #ffffff; transition: all 0.2s;
+    }
+    .option-card:hover { border-color: #1a6fd4; background: #e8f1fb; }
+    .option-card input[type=radio] { display: none; }
+    .option-card:has(input:checked) {
+        border-color: #1a6fd4;
+        background: #e8f1fb;
+    }
+    input[type=radio]:checked ~ .option-letter { 
+        background: #1a6fd4; color: #ffffff;
+    }
+    input[type=radio]:checked ~ .option-text { color: #1a6fd4; font-weight: 600; }
+    .option-letter {
+        width: 32px; height: 32px;
+        border-radius: 50%; background: #f0f6ff;
+        display: flex; align-items: center;
+        justify-content: center;
+        font-weight: bold; margin-right: 12px;
+        flex-shrink: 0; border: 1px solid #dbeafe;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+</div>
+
+<!-- Proctoring Alert -->
+<div id="proctor-alert" class="alert alert-warning alert-dismissible fade" role="alert" style="position:fixed;top:80px;right:20px;z-index:9999;display:none;">
+    <strong>Warning!</strong> <span id="proctor-message"></span>
+</div>
+
+<!-- Hidden video for proctoring -->
+<video id="webcam" style="display:none;" autoplay></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<div class="test-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <div style="width:32px; height:32px; background:linear-gradient(135deg, #1a6fd4, #0ea5e9); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white;">
+                <i class="bi bi-stars"></i>
+            </div>
+            <h5 class="mb-0 fw-bold" style="font-family:'Plus Jakarta Sans'; color:#1a6fd4;">HireVerse Assessment</h5>
+        </div>
+        <div class="text-center">
+            <span class="d-block fw-bold">{{ test.candidate.name }}</span>
+            <small class="text-muted">{{ test.job.title }}</small>
+        </div>
+        <div>
+            <span id="timer" class="timer-text">⏱ {{ test.time_limit_minutes }}:00</span>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold small text-muted">PROGRESS</span>
+                    <span id="progress-text" class="fw-bold small text-primary">Answered: 0 / 5</span>
+                </div>
+                <div class="progress" style="height: 10px; border-radius:10px; background: #dbeafe;">
+                    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #1a6fd4, #0ea5e9);"></div>
+                </div>
+            </div>
+
+            <form id="test-form" method="POST" action="{% url 'tests:submit_test' test.invite_token %}">
+                {% csrf_token %}
+                {% for q in questions %}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-transparent border-secondary d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Question {{ forloop.counter }} of 5</span>
+                        <span class="badge badge-{{ q.category }}">{{ q.get_category_display }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="mb-4 lead fw-bold">{{ q.question_text }}</h5>
+                        
+                        <div class="options-container">
+                            <label class="option-card" for="opt_{{ q.id }}_A">
+                                <input type="radio" name="question_{{ q.id }}" id="opt_{{ q.id }}_A" value="A" onchange="updateProgress()">
+                                <span class="option-letter">A</span>
+                                <span class="option-text">{{ q.option_a }}</span>
+                            </label>
+                            
+                            <label class="option-card" for="opt_{{ q.id }}_B">
+                                <input type="radio" name="question_{{ q.id }}" id="opt_{{ q.id }}_B" value="B" onchange="updateProgress()">
+                                <span class="option-letter">B</span>
+                                <span class="option-text">{{ q.option_b }}</span>
+                            </label>
+                            
+                            <label class="option-card" for="opt_{{ q.id }}_C">
+                                <input type="radio" name="question_{{ q.id }}" id="opt_{{ q.id }}_C" value="C" onchange="updateProgress()">
+                                <span class="option-letter">C</span>
+                                <span class="option-text">{{ q.option_c }}</span>
+                            </label>
+                            
+                            <label class="option-card" for="opt_{{ q.id }}_D">
+                                <input type="radio" name="question_{{ q.id }}" id="opt_{{ q.id }}_D" value="D" onchange="updateProgress()">
+                                <span class="option-letter">D</span>
+                                <span class="option-text">{{ q.option_d }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="text-center mt-5 mb-5">
+                    <button type="button" class="btn btn-success btn-lg px-5" data-bs-toggle="modal" data-bs-target="#submitModal">
+                        Submit Test
+                    </button>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" id="submitModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Confirm Submission</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p id="modal-text">Are you sure you want to submit?</p>
+                                <p class="text-info small mb-0">You cannot change your answers after submitting.</p>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Yes, Submit Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts_in_content %}
+<script>
+let seconds = {{ time_limit_seconds }};
+const timer = document.getElementById('timer');
+const interval = setInterval(() => {
+    seconds--;
+    const m = Math.floor(seconds/60).toString().padStart(2,'0');
+    const s = (seconds%60).toString().padStart(2,'0');
+    timer.textContent = '⏱ ' + m + ':' + s;
+    if(seconds <= 300) timer.style.color = '#ff4444';
+    if(seconds <= 0) {
+        clearInterval(interval);
+        alert('Time is up! Submitting your test...');
+        document.getElementById('test-form').submit();
+    }
+}, 1000);
+
+function updateProgress() {
+    const total = 5;
+    const answered = new Set();
+    const inputs = document.querySelectorAll('input[type="radio"]:checked');
+    inputs.forEach(input => answered.add(input.name));
+    const count = answered.size;
+    const pct = (count / total) * 100;
+    
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = `Answered: ${count} / ${total}`;
+    document.getElementById('modal-text').innerHTML = `Are you sure you want to submit?<br>You have answered <strong>${count} out of ${total}</strong> questions.`;
+}
+
+// Proctoring System
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let proctorInterval;
+
+async function startProctoring() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        
+        proctorInterval = setInterval(checkProctoring, 3000);
+    } catch (err) {
+        console.error('Camera access denied:', err);
+        alert('Camera access is required for this test.');
+    }
+}
+
+function checkProctoring() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    
+    canvas.toBlob(async (blob) => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                const response = await fetch('{% url "tests:check_proctoring" test.invite_token %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frame: reader.result })
+                });
+                
+                const data = await response.json();
+                
+                if (data.warning) {
+                    showAlert(data.warning);
+                }
+                
+                if (data.terminate) {
+                    clearInterval(proctorInterval);
+                    clearInterval(interval);
+                    alert('Test terminated due to proctoring violations.');
+                    document.getElementById('test-form').submit();
+                }
+            } catch (err) {
+                console.error('Proctoring check failed:', err);
+            }
+        };
+        reader.readAsDataURL(blob);
+    }, 'image/jpeg', 0.8);
+}
+
+function showAlert(message) {
+    const alert = document.getElementById('proctor-alert');
+    document.getElementById('proctor-message').textContent = message;
+    alert.style.display = 'block';
+    alert.classList.add('show');
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => alert.style.display = 'none', 150);
+    }, 5000);
+}
+
+startProctoring();
+</script>
+{% endblock %}
+{% endblock %}

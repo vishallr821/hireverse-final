@@ -1,0 +1,130 @@
+{% extends "tests/base_test.html" %}
+
+{% block extra_css %}
+<style>
+    .dsa-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: #ffffff;
+        border-bottom: 2px solid #28a745;
+        padding: 15px 0;
+        box-shadow: 0 4px 12px rgba(40,167,69,0.1);
+    }
+    #dsa-frame {
+        width: 100%;
+        height: calc(100vh - 100px);
+        border: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+</div>
+
+<!-- Proctoring Alert -->
+<div id="proctor-alert" class="alert alert-warning alert-dismissible fade" role="alert" style="position:fixed;top:80px;right:20px;z-index:9999;display:none;">
+    <strong>Warning!</strong> <span id="proctor-message"></span>
+</div>
+
+<!-- Hidden video for proctoring -->
+<video id="webcam" style="display:none;" autoplay></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<div class="dsa-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <div style="width:32px; height:32px; background:linear-gradient(135deg, #28a745, #20c997); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white;">
+                <i class="bi bi-code-square"></i>
+            </div>
+            <h5 class="mb-0 fw-bold" style="color:#28a745;">DSA Coding Round</h5>
+        </div>
+        <div class="text-center">
+            <span class="d-block fw-bold">{{ candidate.name }}</span>
+            <small class="text-muted">{{ test.job.title }}</small>
+        </div>
+        <div>
+            <span class="badge bg-success">Proctored</span>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid p-0">
+    <iframe id="dsa-frame" src="http://localhost:8001/problems?candidate_id={{ dsa_session.id }}"></iframe>
+</div>
+
+<script>
+// Proctoring System
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let proctorInterval;
+
+async function startProctoring() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        
+        proctorInterval = setInterval(checkProctoring, 3000);
+    } catch (err) {
+        console.error('Camera access denied:', err);
+        alert('Camera access is required for this DSA round.');
+    }
+}
+
+function checkProctoring() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    
+    canvas.toBlob(async (blob) => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                const response = await fetch('{% url "tests:check_dsa_proctoring" dsa_session.invite_token %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frame: reader.result })
+                });
+                
+                const data = await response.json();
+                
+                if (data.warning) {
+                    showAlert(data.warning);
+                }
+                
+                if (data.terminate) {
+                    clearInterval(proctorInterval);
+                    alert('DSA session terminated due to proctoring violations.');
+                    window.location.href = '{% url "tests:final_results" test.id %}';
+                }
+            } catch (err) {
+                console.error('Proctoring check failed:', err);
+            }
+        };
+        reader.readAsDataURL(blob);
+    }, 'image/jpeg', 0.8);
+}
+
+function showAlert(message) {
+    const alert = document.getElementById('proctor-alert');
+    document.getElementById('proctor-message').textContent = message;
+    alert.style.display = 'block';
+    alert.classList.add('show');
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => alert.style.display = 'none', 150);
+    }, 5000);
+}
+
+startProctoring();
+
+// Listen for completion from iframe
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'dsa_completed') {
+        clearInterval(proctorInterval);
+        window.location.href = '{% url "tests:final_results" test.id %}';
+    }
+});
+</script>
+{% endblock %}

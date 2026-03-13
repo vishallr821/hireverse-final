@@ -1,0 +1,130 @@
+{% extends "tests/base_test.html" %}
+
+{% block extra_css %}
+<style>
+    .score-card {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #dbeafe;
+        box-shadow: 0 4px 12px rgba(26,111,212,0.05);
+    }
+    .score-value { font-size: 2.5rem; font-weight: bold; font-family: 'Plus Jakarta Sans'; }
+    .text-excelent { color: #10b981; }
+    .text-average { color: #f59e0b; }
+    .text-poor { color: #ef4444; }
+    
+    .question-result {
+        border-left: 6px solid #dbeafe;
+        margin-bottom: 2rem;
+        border-radius: 16px;
+    }
+    .result-correct { border-left-color: #10b981; background: #f0fdf4; }
+    .result-incorrect { border-left-color: #ef4444; background: #fef2f2; }
+
+    .option-item {
+        padding: 12px 16px;
+        margin: 6px 0;
+        border-radius: 10px;
+        border: 1.5px solid #dbeafe;
+        background: #ffffff;
+        font-size: 14px;
+    }
+    .opt-correct { border-color: #10b981; background: #d1fae5; color: #065f46; font-weight: 600; }
+    .opt-wrong { border-color: #ef4444; background: #fee2e2; color: #991b1b; font-weight: 600; }
+    
+    .ai-explanation {
+        background: #e0f2fe;
+        border: 1px solid #bae6fd;
+        color: #0369a1;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="mb-5 text-center">
+            <h2 class="mb-3">Assessment Results</h2>
+            <p class="text-muted">{{ test.candidate.name }} | {{ test.job.title }}</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="score-card">
+                    <div class="text-muted mb-1">Aptitude Score</div>
+                    <div class="score-value text-info">{{ test.aptitude_score|floatformat:0 }}%</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="score-card">
+                    <div class="text-muted mb-1">Technical Score</div>
+                    <div class="score-value text-info">{{ test.technical_score|floatformat:0 }}%</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="score-card border-secondary">
+                    <div class="text-muted mb-1">Total Score</div>
+                    <div class="score-value 
+                        {% if test.total_score >= 70 %}text-excelent
+                        {% elif test.total_score >= 40 %}text-average
+                        {% else %}text-poor{% endif %}">
+                        {{ test.total_score|floatformat:0 }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mb-4">Detailed Review</h4>
+
+        {% for item in results_data %}
+        <div class="card question-result {% if item.answer.is_correct %}result-correct{% else %}result-incorrect{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="fw-bold">Q{{ item.question.order }}</span>
+                    <span class="badge badge-{{ item.question.category }}">{{ item.question.get_category_display }}</span>
+                </div>
+                
+                <h5 class="mb-4">{{ item.question.question_text }}</h5>
+
+                <div class="row mb-4">
+                    {% for key, val in item.options.items %}
+                    <div class="col-md-6">
+                        <div class="option-item 
+                            {% if key == item.question.correct_option %}opt-correct
+                            {% elif key == item.answer.selected_option and not item.answer.is_correct %}opt-wrong{% endif %}">
+                            <span class="fw-bold me-2">{{ key }})</span> {{ val }}
+                            {% if key == item.question.correct_option %}
+                                <span class="float-end">✓</span>
+                            {% elif key == item.answer.selected_option and not item.answer.is_correct %}
+                                <span class="float-end">✗</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="ai-explanation">
+                    <p class="mb-1 small fw-bold text-uppercase">🤖 AI Feedback:</p>
+                    {{ item.answer.llm_explanation }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="text-center mt-5 mb-5">
+            {% if test.total_score >= 50 and test.status == 'completed' %}
+            <a href="{% url 'tests:send_to_dsa_round' test.id %}" class="btn btn-success btn-lg px-5 me-3">
+                <i class="bi bi-code-square"></i> Send to DSA Round
+            </a>
+            {% endif %}
+            <a href="{% url 'resumes:dashboard' %}" class="btn btn-outline-info px-5">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
