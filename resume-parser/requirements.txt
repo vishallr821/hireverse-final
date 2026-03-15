@@ -12,3 +12,5 @@ Pillow
 huggingface_hub
 groq
 opencv-python
+djangorestframework
+requests
